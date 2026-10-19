@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="description" content="BlyART — OJT daily-report & laptop repair tracker" />
+  <title>BlyART Tracker</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="stylesheet" href="/css/app.css" />
+
+  <!-- Barcode libs (CDN — no build step) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════════════════════════════ -->
+<div id="login-page" style="display:none;">
+  <div class="login-box">
+    <div class="login-title">🔧 BlyART</div>
+    <div class="login-sub">OJT &amp; Repair Tracking System</div>
+    <form id="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" autocomplete="username" required placeholder="admin" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn btn-primary w-full mt-2">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     APP SHELL
+══════════════════════════════════════════════════════════ -->
+<div id="app" style="display:none;">
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <span class="topbar-brand">🔧 BlyART</span>
+    <div class="topbar-right">
+      <span id="user-label" class="text-muted" style="font-size:.85rem;"></span>
+      <button id="logout-btn" class="btn btn-ghost btn-sm">Log out</button>
+    </div>
+  </header>
+
+  <!-- Nav -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <button class="nav-btn" data-page="dashboard" aria-label="Dashboard">📊 Dashboard</button>
+    <button class="nav-btn" data-page="ojt"       aria-label="OJT Tracker">📋 OJT Tracker</button>
+    <button class="nav-btn" data-page="repairs"   aria-label="Repair Tracker">🛠 Repairs</button>
+    <button class="nav-btn" data-page="barcode"   aria-label="Barcode Tools">📷 Barcode</button>
+  </nav>
+
+  <main>
+
+    <!-- ── DASHBOARD ─────────────────────────────────────── -->
+    <section id="page-dashboard" class="page" aria-label="Dashboard">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-val" id="dash-ojt-hours">—</div>
+          <div class="stat-lbl">Total OJT Hours</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="dash-ojt-shifts">—</div>
+          <div class="stat-lbl">Shifts Logged</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="dash-laptops">—</div>
+          <div class="stat-lbl">Laptops on Record</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="dash-daily-jobs">—</div>
+          <div class="stat-lbl">Today's Jobs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="dash-revenue">—</div>
+          <div class="stat-lbl">Today's Revenue</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Recent Laptops</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Barcode</th><th>Unit</th><th>Owner</th><th>Status</th></tr></thead>
+            <tbody id="dash-recent-tbody">
+              <tr><td colspan="4" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── OJT TRACKER ───────────────────────────────────── -->
+    <section id="page-ojt" class="page" aria-label="OJT Tracker">
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-val" id="ojt-total-hours">—</div>
+          <div class="stat-lbl">Total Hours Rendered</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="ojt-total-shifts">—</div>
+          <div class="stat-lbl">Total Shifts</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Log a Shift</div>
+        <form id="ojt-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ojt-date">Date</label>
+              <input id="ojt-date" name="ojt-date" type="date" required />
+            </div>
+            <div class="form-group">
+              <label for="ojt-timein">Time In (HH:MM)</label>
+              <input id="ojt-timein" name="ojt-timein" type="time" required />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ojt-slip">Report Slip No.</label>
+              <input id="ojt-slip" name="ojt-slip" type="text" placeholder="RS-001" />
+            </div>
+            <div class="form-group">
+              <label for="ojt-remarks">Remarks</label>
+              <input id="ojt-remarks" name="ojt-remarks" type="text" placeholder="Optional notes" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Log Shift</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Shift History</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Time In</th><th>Time Out</th><th>Hours</th><th>Slip No.</th><th>Actions</th></tr></thead>
+            <tbody id="ojt-tbody">
+              <tr><td colspan="6" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── REPAIRS ───────────────────────────────────────── -->
+    <section id="page-repairs" class="page" aria-label="Repair Tracker">
+
+      <div class="stats">
+        <div class="stat-card"><div class="stat-val" id="r-stat-total">—</div><div class="stat-lbl">Total Units</div></div>
+        <div class="stat-card"><div class="stat-val" id="r-stat-pending">—</div><div class="stat-lbl">Pending</div></div>
+        <div class="stat-card"><div class="stat-val" id="r-stat-inprog">—</div><div class="stat-lbl">In Progress</div></div>
+        <div class="stat-card"><div class="stat-val" id="r-stat-done">—</div><div class="stat-lbl">Done / Released</div></div>
+        <div class="stat-card"><div class="stat-val" id="r-stat-revenue">—</div><div class="stat-lbl">Today's Revenue</div></div>
+      </div>
+
+      <!-- Add laptop -->
+      <div class="card">
+        <div class="card-title">Register Laptop Unit</div>
+        <form id="laptop-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="lap-barcode">Barcode</label>
+              <input id="lap-barcode" name="lap-barcode" type="text" required placeholder="LAP-0001" />
+            </div>
+            <div class="form-group">
+              <label for="lap-serial">Serial Number</label>
+              <input id="lap-serial" name="lap-serial" type="text" placeholder="Optional" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="lap-brand">Brand</label>
+              <input id="lap-brand" name="lap-brand" type="text" required placeholder="Acer" />
+            </div>
+            <div class="form-group">
+              <label for="lap-model">Model</label>
+              <input id="lap-model" name="lap-model" type="text" required placeholder="Aspire 5" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="lap-owner">Owner Name</label>
+              <input id="lap-owner" name="lap-owner" type="text" placeholder="Juan Dela Cruz" />
+            </div>
+            <div class="form-group">
+              <label for="lap-contact">Contact</label>
+              <input id="lap-contact" name="lap-contact" type="text" placeholder="09171234567" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Register Unit</button>
+        </form>
+      </div>
+
+      <!-- Laptops table -->
+      <div class="card">
+        <div class="card-title">Laptop Units</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Barcode</th><th>Unit</th><th>Owner</th><th>Contact</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="laptops-tbody">
+              <tr><td colspan="6" class="text-muted">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── BARCODE ───────────────────────────────────────── -->
+    <section id="page-barcode" class="page" aria-label="Barcode Tools">
+
+      <!-- Generate -->
+      <div class="card">
+        <div class="card-title">Generate Barcode Label</div>
+        <div class="form-group">
+          <label for="barcode-input">Barcode value (e.g. LAP-0001)</label>
+          <input id="barcode-input" type="text" placeholder="LAP-0001" />
+        </div>
+        <button id="barcode-gen-btn" class="btn btn-primary">Generate</button>
+
+        <div id="barcode-output" class="hidden mt-2" style="background:#fff;padding:1rem;border-radius:var(--radius);text-align:center;">
+          <svg id="barcode-svg"></svg>
+          <br>
+          <button id="barcode-print-btn" class="btn btn-ghost btn-sm mt-1">🖨 Print</button>
+        </div>
+      </div>
+
+      <!-- Scan -->
+      <div class="card">
+        <div class="card-title">Scan Barcode / QR Code</div>
+        <div class="flex gap-1 mt-1">
+          <button id="scan-start-btn" class="btn btn-primary">📷 Start Camera</button>
+          <button id="scan-stop-btn"  class="btn btn-danger hidden">⏹ Stop</button>
+        </div>
+        <div id="scanner-container" class="mt-2"></div>
+
+        <div id="scan-result-box" class="hidden mt-2">
+          <div class="form-group">
+            <label>Scanned value</label>
+            <input id="scan-result" type="text" readonly />
+          </div>
+          <div id="scan-laptop-info" class="card" style="margin-top:.5rem;"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- /#app -->
+
+<!-- Repair report modal -->
+<div id="rep-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rep-modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="rep-modal-title">File Repair Report</span>
+      <button class="modal-close" id="rep-modal-close" aria-label="Close">✕</button>
+    </div>
+    <form id="rep-form">
+      <input type="hidden" id="rep-laptop-id" name="rep-laptop-id" />
+      <div class="form-group">
+        <label for="rep-laptop-sel">Laptop Unit</label>
+        <select id="rep-laptop-id" name="rep-laptop-id"></select>
+      </div>
+      <div class="form-group">
+        <label for="rep-problem">Problem Description *</label>
+        <textarea id="rep-problem" name="rep-problem" required placeholder="Describe the issue…"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="rep-actions">Actions Taken</label>
+        <textarea id="rep-actions" name="rep-actions" placeholder="What was done…"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="rep-parts">Parts Used <span class="text-muted">(one per line: PartName, Qty, Cost)</span></label>
+        <textarea id="rep-parts" name="rep-parts" placeholder="Charging IC, 1, 350&#10;Thermal paste, 1, 50"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="rep-labor">Labor Cost (₱)</label>
+          <input id="rep-labor" name="rep-labor" type="number" min="0" value="0" />
+        </div>
+        <div class="form-group">
+          <label for="rep-status">Status</label>
+          <select id="rep-status" name="rep-status">
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="released">Released</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="rep-remarks">Remarks</label>
+        <input id="rep-remarks" name="rep-remarks" type="text" placeholder="Optional" />
+      </div>
+      <div class="flex gap-1 mt-2">
+        <button type="submit" class="btn btn-primary">Save Report</button>
+        <button type="button" class="btn btn-ghost" id="rep-modal-close-btn" onclick="document.getElementById('rep-modal').classList.remove('open')">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" role="status" aria-live="polite"></div>
+
+<!-- App scripts -->
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/ojt.js"></script>
+<script src="/js/repairs.js"></script>
+<script src="/js/barcode.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>
