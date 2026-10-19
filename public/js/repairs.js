@@ -50,8 +50,8 @@ const RepairsPage = (() => {
         </tr>`).join('');
 
       // Populate laptop select in report modal
-      const sel = document.getElementById('rep-laptop-id');
-      sel.innerHTML = laptops.map((l) =>
+      const sel = document.getElementById('rep-laptop-sel');
+      if (sel) sel.innerHTML = laptops.map((l) =>
         `<option value="${l._id}">${l.barcode} — ${l.brand} ${l.model}</option>`
       ).join('');
     } catch (e) { tbody.innerHTML = `<tr><td colspan="6" class="text-danger">${e.message}</td></tr>`; }
@@ -106,7 +106,7 @@ const RepairsPage = (() => {
         : [];
 
       await API.post('/repairs/reports', {
-        laptop:             f['rep-laptop-id'].value,
+        laptop:             document.getElementById('rep-laptop-sel').value || f['rep-laptop-id'].value,
         problemDescription: f['rep-problem'].value,
         actionsTaken:       f['rep-actions'].value,
         partsUsed,
