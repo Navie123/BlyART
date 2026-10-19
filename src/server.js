@@ -25,6 +25,9 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, status: 'ok', uptime: process.uptime() });
 });
 
+// Lightweight ping for UptimeRobot (no logging overhead)
+app.get('/ping', (req, res) => res.sendStatus(200));
+
 // Auth
 app.use('/api/auth', require('./routes/auth'));
 
